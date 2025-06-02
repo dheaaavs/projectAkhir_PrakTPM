@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projectakhir_praktpm/models/wish_model.dart';
-//import 'package:projectakhir_praktpm/pages/create_wish_page.dart';
-//import 'package:projectakhir_praktpm/pages/edit_wish_page.dart';
+import 'package:projectakhir_praktpm/pages/create_wish_page.dart';
+import 'package:projectakhir_praktpm/pages/edit_wish_page.dart';
 import 'package:projectakhir_praktpm/services/wish_service.dart';
 //import 'package:projectakhir_praktpm/pages/detail_wish_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // MOVIE LIST CONTAINER
+  // WISH LIST CONTAINER
   Widget _movieContainer() {
     return FutureBuilder(
       future: WishApi.getWish(),
@@ -75,18 +75,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // MOVIE LIST VIEW (PAKE LISTVIEW.BUILDER)
+  // WISH LIST VIEW (PAKE LISTVIEW.BUILDER)
   Widget _movieList(BuildContext context, List<Wishes> wish) {
     return ListView(
       children: [
         ElevatedButton(
           onPressed: () {
-            //Navigator.of(context).push(
-              //MaterialPageRoute(
-                //builder: (context) =>
-                    //CreateMoviePage(username: widget.username),
-              //),
-           // ).then((_) => setState(() {}));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    CreateWishPage(username: widget.username),
+              ),
+           ).then((_) => setState(() {}));
           },
           child: const Text("Add Wish"),
         ),
@@ -141,13 +141,13 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            // Navigator.of(context).push(
-                            //   // MaterialPageRoute(
-                            //   //   builder: (context) => EditWishPage(
-                            //   //       username: widget.username,
-                            //   //       id: itemWish.id!),
-                            //   // ),
-                            // ).then((_) => setState(() {}));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => EditWishPage(
+                                    username: widget.username,
+                                    id: itemWish.id!),
+                              ),
+                            ).then((_) => setState(() {}));
                           },
                           child: const Text("Edit"),
                         ),
