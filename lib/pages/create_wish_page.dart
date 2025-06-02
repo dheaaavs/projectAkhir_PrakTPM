@@ -72,7 +72,7 @@ class _CreateWishPageState extends State<CreateWishPage> {
       final jsonMap = jsonDecode(responseData);
       setState(() {
         _imageUrl = jsonMap['secure_url'];
-        image.text = _imageUrl!; // simpan URL ke controller
+        image.text = _imageUrl!;
       });
     } else {
       showErrorDialog('Upload gagal. Status: ${response.statusCode}');
@@ -91,7 +91,7 @@ class _CreateWishPageState extends State<CreateWishPage> {
 
     final priceValue = int.tryParse(price.text);
     if (priceValue == null) {
-      showErrorDialog('Price harus angka');
+      showErrorDialog('Price harus berupa angka');
       return;
     }
 
@@ -107,7 +107,7 @@ class _CreateWishPageState extends State<CreateWishPage> {
         category: category,
         priority: priority.text.trim(),
         image: image.text.trim(),
-        acquired: false,
+        acquired: false, // Set default acquired ke false
       );
 
       final response = await WishApi.createWish(newWish);
@@ -208,17 +208,14 @@ class _CreateWishPageState extends State<CreateWishPage> {
             ),
             const SizedBox(height: 16),
 
-            // PILIH GAMBAR
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text('Pilih Gambar'),
-            ),
-            const SizedBox(height: 10),
-
-            // UPLOAD GAMBAR
-            ElevatedButton(
-              onPressed: _uploadImage,
-              child: const Text('Upload ke Cloudinary'),
+            // PILIH & UPLOAD GAMBAR SEKALIGUS
+            ElevatedButton.icon(
+              onPressed: () async {
+                await _pickImage();
+                await _uploadImage();
+              },
+              icon: const Icon(Icons.cloud_upload),
+              label: const Text("Pilih & Upload Gambar"),
             ),
             const SizedBox(height: 10),
 

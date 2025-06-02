@@ -8,23 +8,19 @@ class WishModel {
   WishModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
+
     if (json['data'] != null) {
-      data = <Wishes>[];
-      json['data'].forEach((v) {
-        data!.add(Wishes.fromJson(v));
-      });
+      data = (json['data'] as List)
+          .map((e) => Wishes.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['status'] = this.status;
-    data['message'] = this.message;
-    if (this.data != null) {
-      data['data'] = this.data!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'status': status,
+    'message': message,
+    if (data != null) 'data': data!.map((v) => v.toJson()).toList(),
+  };
 }
 
 class Wishes {
@@ -35,47 +31,50 @@ class Wishes {
   String? image;
   String? category;
   String? priority;
-  bool? acquired;
+  bool acquired = false; // Default value langsung di deklarasi
   String? createdAt;
   String? updatedAt;
 
-  Wishes(
-      {this.id,
-        this.title,
-        this.price,
-        this.desc,
-        this.image,
-        this.category,
-        this.priority,
-        this.acquired,
-        this.createdAt,
-        this.updatedAt});
+  Wishes({
+    this.id,
+    this.title,
+    this.price,
+    this.desc,
+    this.image,
+    this.category,
+    this.priority,
+    bool? acquired, // Opsional untuk override
+    this.createdAt,
+    this.updatedAt,
+  }) : acquired = acquired ?? false; // Nilai override jika ada
 
   Wishes.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     title = json['title'];
-    price = json['price'];
+    price = json['price'] is int
+        ? json['price']
+        : int.tryParse(json['price'].toString());
     desc = json['desc'];
-    image = json['image'];
+    image = json['image'] is String
+        ? json['image']
+        : (json['image']?['secure_url'] ?? '') as String;
     category = json['category'];
     priority = json['priority'];
-    acquired = json['acquired'];
+    acquired = json['acquired'] ?? false;
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['title'] = this.title;
-    data['price'] = this.price;
-    data['desc'] = this.desc;
-    data['image'] = this.image;
-    data['category'] = this.category;
-    data['priority'] = this.priority;
-    data['acquired'] = this.acquired;
-    data['createdAt'] = this.createdAt;
-    data['updatedAt'] = this.updatedAt;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'price': price,
+    'desc': desc,
+    'image': image,
+    'category': category,
+    'priority': priority,
+    'acquired': acquired,
+    'createdAt': createdAt,
+    'updatedAt': updatedAt,
+  };
 }

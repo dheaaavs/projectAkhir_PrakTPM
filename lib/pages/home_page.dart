@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () {
-                            _deleteMovie(itemWish.id!);
+                            _deleteWish(itemWish.id!);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,
@@ -182,7 +182,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // DELETE wish
-  void _deleteMovie(int id) async {
+  void _deleteWish(int id) async {
     try {
       final response = await WishApi.deleteWish(id);
       if (response["status"] == "Success") {

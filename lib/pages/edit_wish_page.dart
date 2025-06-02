@@ -10,7 +10,7 @@ import 'package:projectakhir_praktpm/pages/home_page.dart';
 class EditWishPage extends StatefulWidget {
   final String username;
   final int id;
-  const EditWishPage({super.key, required this.username, required this.id,});
+  const EditWishPage({super.key, required this.username, required this.id});
 
   @override
   State<EditWishPage> createState() => _EditWishPageState();
@@ -22,11 +22,12 @@ class _EditWishPageState extends State<EditWishPage> {
   final desc = TextEditingController();
   final priority = TextEditingController();
   final image = TextEditingController();
-  late bool acquired;
-  late String category;
+  final categoryList = ["Clothes", "Gadget", "Hobby"];
+
+  late String category = categoryList[0];
+  late bool acquired = false;
   bool isLoaded = false;
 
-  final categoryList = ["Clothes", "Gadget", "Hobby"];
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -80,7 +81,11 @@ class _EditWishPageState extends State<EditWishPage> {
   }
 
   void updateWish() async {
-    if (title.text.isEmpty || price.text.isEmpty || desc.text.isEmpty || priority.text.isEmpty || image.text.isEmpty) {
+    if (title.text.isEmpty ||
+        price.text.isEmpty ||
+        desc.text.isEmpty ||
+        priority.text.isEmpty ||
+        image.text.isEmpty) {
       showErrorDialog("Semua field wajib diisi!");
       return;
     }
@@ -93,15 +98,15 @@ class _EditWishPageState extends State<EditWishPage> {
 
     try {
       Wishes updatedWish = Wishes(
-      id: widget.id,
-      title: title.text.trim(),
-      price: priceValue,
-      desc: desc.text.trim(),
-      category: category,
-      priority: priority.text.trim(),
-      image: image.text.trim(),
-      acquired: acquired,
-    );
+        id: widget.id,
+        title: title.text.trim(),
+        price: priceValue,
+        desc: desc.text.trim(),
+        category: category,
+        priority: priority.text.trim(),
+        image: image.text.trim(),
+        acquired: acquired,
+      );
 
       final result = await WishApi.updateClothesById(updatedWish);
 
@@ -122,6 +127,16 @@ class _EditWishPageState extends State<EditWishPage> {
   }
 
   @override
+  void dispose() {
+    title.dispose();
+    price.dispose();
+    desc.dispose();
+    priority.dispose();
+    image.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Edit Wish")),
@@ -130,101 +145,105 @@ class _EditWishPageState extends State<EditWishPage> {
         child: FutureBuilder(
           future: WishApi.getWishById(widget.id),
           builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Text("Error loading data");
-          } else if (snapshot.hasData) {
-            if (!isLoaded) {
-            Wishes wishUpdate = Wishes.fromJson(snapshot.data!["data"]);
-            title.text = wishUpdate.title!;
-            price.text = wishUpdate.price!.toString();
-            desc.text = wishUpdate.desc!;
-            category = category;
-            priority.text = wishUpdate.priority!;
-            isLoaded = true;
-          }
-        return ListView(
-          children: [
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(labelText: "Title", prefixIcon: Icon(Icons.title)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: price,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Price", prefixIcon: Icon(Icons.attach_money)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: desc,
-              decoration: const InputDecoration(labelText: "Description", prefixIcon: Icon(Icons.description)),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: category,
-              items: categoryList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: (value) => setState(() => category = value!),
-              decoration: const InputDecoration(labelText: "Category", prefixIcon: Icon(Icons.category)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: priority,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Priority", prefixIcon: Icon(Icons.priority_high)),
-            ),
-            const SizedBox(height: 16),
+            if (snapshot.hasError) {
+              return const Text("Error loading data");
+            } else if (snapshot.hasData) {
+              if (!isLoaded) {
+                final wishUpdate = Wishes.fromJson(snapshot.data!["data"]);
+                title.text = wishUpdate.title!;
+                price.text = wishUpdate.price!.toString();
+                desc.text = wishUpdate.desc!;
+                category = wishUpdate.category!;
+                priority.text = wishUpdate.priority!;
+                acquired = wishUpdate.acquired!;
 
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text('Pilih Gambar'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _uploadImage,
-              child: const Text('Upload ke Cloudinary'),
-            ),
-            const SizedBox(height: 10),
-            if (_imageFile != null)
-              Image.file(_imageFile!, height: 150),
-            if (image.text.isNotEmpty)
-              Column(
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() {
+                    isLoaded = true;
+                  });
+                });
+              }
+
+              return ListView(
                 children: [
-                  const Text("Uploaded Image:"),
-                  Image.network(image.text, height: 150),
+                  TextField(
+                    controller: title,
+                    decoration: const InputDecoration(labelText: "Title", prefixIcon: Icon(Icons.title)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: price,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "Price", prefixIcon: Icon(Icons.attach_money)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: desc,
+                    decoration: const InputDecoration(labelText: "Description", prefixIcon: Icon(Icons.description)),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: category,
+                    items: categoryList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    onChanged: (value) => setState(() => category = value!),
+                    decoration: const InputDecoration(labelText: "Category", prefixIcon: Icon(Icons.category)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: priority,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "Priority", prefixIcon: Icon(Icons.priority_high)),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Pilih Gambar'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _uploadImage,
+                    child: const Text('Upload ke Cloudinary'),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_imageFile != null)
+                    Image.file(_imageFile!, height: 150),
+                  if (image.text.isNotEmpty)
+                    Column(
+                      children: [
+                        const Text("Uploaded Image:"),
+                        Image.network(image.text, height: 150),
+                      ],
+                    ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Acquired?"),
+                      Switch(
+                        value: acquired,
+                        onChanged: (value) => setState(() => acquired = value),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: updateWish,
+                    icon: const Icon(Icons.save),
+                    label: const Text("Update Wish"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ],
-              ),
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Acquired?"),
-                Switch(
-                  value: acquired,
-                  onChanged: (value) => setState(() => acquired = value),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            ElevatedButton.icon(
-              onPressed: updateWish,
-              icon: const Icon(Icons.save),
-              label: const Text("Update Wish"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
+              );
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
           },
         ),
       ),
