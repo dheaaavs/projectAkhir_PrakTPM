@@ -6,9 +6,8 @@ class WishModel {
   WishModel({this.status, this.message, this.data});
 
   WishModel.fromJson(Map<String, dynamic> json) {
-    status = json['status'];
+    status  = json['status'];
     message = json['message'];
-
     if (json['data'] != null) {
       data = (json['data'] as List)
           .map((e) => Wishes.fromJson(e as Map<String, dynamic>))
@@ -17,7 +16,7 @@ class WishModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'status': status,
+    'status' : status,
     'message': message,
     if (data != null) 'data': data!.map((v) => v.toJson()).toList(),
   };
@@ -31,9 +30,9 @@ class Wishes {
   String? image;
   String? category;
   String? priority;
-  bool acquired = false; // Default value langsung di deklarasi
-  String? createdAt;
-  String? updatedAt;
+  bool?   acquired;
+  String? createdAt;   // <─ ditambahkan
+  String? updatedAt;   // <─ ditambahkan
 
   Wishes({
     this.id,
@@ -43,37 +42,52 @@ class Wishes {
     this.image,
     this.category,
     this.priority,
-    bool? acquired, // Opsional untuk override
+    this.acquired,
     this.createdAt,
     this.updatedAt,
-  }) : acquired = acquired ?? false; // Nilai override jika ada
+  });
 
-  Wishes.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    title = json['title'];
-    price = json['price'] is int
-        ? json['price']
-        : int.tryParse(json['price'].toString());
-    desc = json['desc'];
-    image = json['image'] is String
-        ? json['image']
-        : (json['image']?['secure_url'] ?? '') as String;
-    category = json['category'];
-    priority = json['priority'];
-    acquired = json['acquired'] ?? false;
-    createdAt = json['createdAt'];
-    updatedAt = json['updatedAt'];
+  factory Wishes.fromJson(Map<String, dynamic> json) {
+    String? imageUrl;
+
+    // --- konversi Buffer -> String URL jika ada ---
+    try {
+      final img = json['image'];
+      if (img is Map && img['data'] is List) {
+        List<int> bytes = List<int>.from(img['data']);
+        if (bytes.isNotEmpty) {
+          imageUrl = String.fromCharCodes(bytes);
+        }
+      } else if (img is String) {
+        imageUrl = img;
+      }
+    } catch (_) {
+      imageUrl = null;
+    }
+
+    return Wishes(
+      id        : json['id'],
+      title     : json['title'],
+      price     : json['price'],
+      desc      : json['desc'],
+      image     : imageUrl,
+      category  : json['category'],
+      priority  : json['priority'],
+      acquired  : json['acquired'],
+      createdAt : json['createdAt'],
+      updatedAt : json['updatedAt'],
+    );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'price': price,
-    'desc': desc,
-    'image': image,
-    'category': category,
-    'priority': priority,
-    'acquired': acquired,
+    'id'       : id,
+    'title'    : title,
+    'price'    : price,
+    'desc'     : desc,
+    'image'    : image,
+    'category' : category,
+    'priority' : priority,
+    'acquired' : acquired,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };

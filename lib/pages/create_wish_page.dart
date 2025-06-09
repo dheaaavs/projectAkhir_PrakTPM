@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart'; // untuk kIsWeb
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart'; // untuk Web
+
 import 'package:projectakhir_praktpm/models/wish_model.dart';
 import 'package:projectakhir_praktpm/services/wish_service.dart';
 import 'package:projectakhir_praktpm/pages/home_page.dart';
@@ -21,11 +25,13 @@ class _CreateWishPageState extends State<CreateWishPage> {
   final price = TextEditingController();
   final desc = TextEditingController();
   final image = TextEditingController(); // Untuk menyimpan URL dari Cloudinary
-  final priority = TextEditingController();
-  final categoryList = ["Clothes", "Gadget", "Hobby"];
+  final priorityList = ["Low", "Medium", "High"];
+  final categoryList = ["Clothes", "Gadget", "Hobby", 'Electronic'];
   String category = "Clothes";
+  String priority = "Low";
 
-  File? _imageFile;
+  File? _imageFile; // untuk mobile
+  Uint8List? _webImage; // untuk web
   String? _imageUrl;
   final ImagePicker _picker = ImagePicker();
 
@@ -46,24 +52,55 @@ class _CreateWishPageState extends State<CreateWishPage> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+    if (kIsWeb) {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          _webImage = result.files.single.bytes;
+          _imageFile = null; // kosongkan jika pakai web
+        });
+      }
+    } else {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          _webImage = null; // kosongkan jika pakai file
+        });
+      }
     }
   }
 
   Future<void> _uploadImage() async {
-    if (_imageFile == null) {
+    if (_imageFile == null && _webImage == null) {
       showErrorDialog('Please select an image first.');
       return;
     }
 
     final url = Uri.parse('https://api.cloudinary.com/v1_1/dpqyi5rst/image/upload');
     final request = http.MultipartRequest('POST', url)
-      ..fields['upload_preset'] = 'meong12'
-      ..files.add(await http.MultipartFile.fromPath('file', _imageFile!.path));
+      ..fields['upload_preset'] = 'meong12';
+
+    if (kIsWeb && _webImage != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          _webImage!,
+          filename: 'upload.jpg',
+        ),
+      );
+    } else if (_imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          _imageFile!.path,
+        ),
+      );
+    }
 
     final response = await request.send();
 
@@ -83,7 +120,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
     if (title.text.isEmpty ||
         price.text.isEmpty ||
         desc.text.isEmpty ||
-        priority.text.isEmpty ||
         image.text.isEmpty) {
       showErrorDialog('Field tidak boleh kosong 😠');
       return;
@@ -95,6 +131,7 @@ class _CreateWishPageState extends State<CreateWishPage> {
       return;
     }
 
+    print("Final image URL: ${image.text}"); // <-- Tambahkan di sini
     _createWishes(context);
   }
 
@@ -105,7 +142,7 @@ class _CreateWishPageState extends State<CreateWishPage> {
         price: int.parse(price.text),
         desc: desc.text.trim(),
         category: category,
-        priority: priority.text.trim(),
+        priority: priority,
         image: image.text.trim(),
         acquired: false, // Set default acquired ke false
       );
@@ -140,7 +177,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
         padding: const EdgeInsets.all(20),
         child: ListView(
           children: [
-            // INPUT title
             TextField(
               controller: title,
               decoration: const InputDecoration(
@@ -151,7 +187,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
             ),
             const SizedBox(height: 16),
 
-            // INPUT price
             TextField(
               controller: price,
               keyboardType: TextInputType.number,
@@ -163,7 +198,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
             ),
             const SizedBox(height: 16),
 
-            // INPUT desc
             TextField(
               controller: desc,
               decoration: const InputDecoration(
@@ -174,7 +208,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
             ),
             const SizedBox(height: 16),
 
-            // INPUT category
             DropdownButtonFormField(
               value: category,
               items: categoryList.map((String value) {
@@ -196,19 +229,27 @@ class _CreateWishPageState extends State<CreateWishPage> {
             ),
             const SizedBox(height: 16),
 
-            // INPUT priority
-            TextField(
-              controller: priority,
-              keyboardType: TextInputType.number,
+            DropdownButtonFormField(
+              value: priority,
+              items: priorityList.map((String value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? value) {
+                setState(() {
+                  priority = value!;
+                });
+              },
               decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.priority_high),
+                prefixIcon: Icon(Icons.category),
                 labelText: "Priority",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
-            // PILIH & UPLOAD GAMBAR SEKALIGUS
             ElevatedButton.icon(
               onPressed: () async {
                 await _pickImage();
@@ -220,6 +261,8 @@ class _CreateWishPageState extends State<CreateWishPage> {
             const SizedBox(height: 10),
 
             // PREVIEW GAMBAR
+            if (kIsWeb && _webImage != null)
+              Image.memory(_webImage!, height: 150),
             if (_imageFile != null)
               Image.file(_imageFile!, height: 150),
             if (_imageUrl != null)
@@ -232,7 +275,6 @@ class _CreateWishPageState extends State<CreateWishPage> {
               ),
             const SizedBox(height: 16),
 
-            // SUBMIT TOMBOL
             ElevatedButton.icon(
               onPressed: submitData,
               icon: const Icon(Icons.add),

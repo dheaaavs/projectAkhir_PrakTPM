@@ -7,23 +7,38 @@ class WishApi{
 
   //mengambil data wish
   static Future<Map<String, dynamic>> getWish() async {
+    print("📤 [GET] Fetching wish data from $url");
+
     final response = await http.get(Uri.parse(url));
+
+    print("📥 [GET] Response status: ${response.statusCode}");
+    print("📥 [GET] Response body: ${response.body}");
+
     return jsonDecode(response.body);
   }
 
   //membuat data wish baru
   static Future<Map<String, dynamic>> createWish(Wishes wish) async {
+    print("📤 [CREATE] Sending request to $url");
+    print("📤 [CREATE] Request body: ${jsonEncode(wish)}");
+
     final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(wish)
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(wish),
     );
+
+    print("📥 [CREATE] Response status: ${response.statusCode}");
+    print("📥 [CREATE] Response body: ${response.body}");
+
     return jsonDecode(response.body);
   }
 
   //menghapus data wish
   static Future<Map<String, dynamic>> deleteWish(int id) async {
     final response = await http.delete(Uri.parse("$url/$id"));
+    print('Status code: ${response.statusCode}');
+    print('Body: ${response.body}');
     return jsonDecode(response.body);
   }
 
@@ -34,8 +49,8 @@ class WishApi{
   }
 
   //update wish by id
-  static Future<Map<String, dynamic>> updateClothesById(Wishes wish) async {
-    final response = await http.put(
+  static Future<Map<String, dynamic>> updateWishById(Wishes wish) async {
+    final response = await http.patch(
         Uri.parse("$url/${wish.id}"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({

@@ -3,7 +3,7 @@ import 'package:projectakhir_praktpm/models/wish_model.dart';
 import 'package:projectakhir_praktpm/pages/create_wish_page.dart';
 import 'package:projectakhir_praktpm/pages/edit_wish_page.dart';
 import 'package:projectakhir_praktpm/services/wish_service.dart';
-//import 'package:projectakhir_praktpm/pages/detail_wish_page.dart';
+import 'package:projectakhir_praktpm/pages/detail_wish_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:projectakhir_praktpm/pages/login_page.dart';
 
@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: _movieContainer(),
+        child: _wishContainer(),
       ),
     );
   }
@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // WISH LIST CONTAINER
-  Widget _movieContainer() {
+  Widget _wishContainer() {
     return FutureBuilder(
       future: WishApi.getWish(),
       builder: (context, snapshot) {
@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
           return Text("Error : ${snapshot.error.toString()}");
         } else if (snapshot.hasData) {
           WishModel response = WishModel.fromJson(snapshot.data!);
-          return _movieList(context, response.data!);
+          return _wishList(context, response.data!);
         }
         return const Center(child: CircularProgressIndicator());
       },
@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // WISH LIST VIEW (PAKE LISTVIEW.BUILDER)
-  Widget _movieList(BuildContext context, List<Wishes> wish) {
+  Widget _wishList(BuildContext context, List<Wishes> wish) {
     return ListView(
       children: [
         ElevatedButton(
@@ -139,13 +139,21 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
+                        // Acquired badge
+                        Chip(
+                          label: Text(itemWish.acquired == true ? "Acquired" : "Not Acquired"),
+                          backgroundColor: itemWish.acquired == true ? Colors.green : Colors.pinkAccent,
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) => EditWishPage(
-                                    username: widget.username,
-                                    id: itemWish.id!),
+                                  username: widget.username,
+                                  id: itemWish.id!,
+                                ),
                               ),
                             ).then((_) => setState(() {}));
                           },
@@ -166,12 +174,12 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 onTap: () {
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder: (context) => DetailWishPage(
-                  //         username: widget.username, id: itemWish.id!),
-                  //   ),
-                  // );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => DetailWishPage(
+                          username: widget.username, id: itemWish.id!),
+                    ),
+                  );
                 },
               ),
             );
@@ -187,9 +195,9 @@ class _HomePageState extends State<HomePage> {
       final response = await WishApi.deleteWish(id);
       if (response["status"] == "Success") {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response["message"])),
+          SnackBar(content: Text(response["msg"] ?? "Wish deleted successfully")),
         );
-        setState(() {});
+        setState(() {});  // Refresh UI setelah delete
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to delete wish")),

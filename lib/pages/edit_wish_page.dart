@@ -10,6 +10,7 @@ import 'package:projectakhir_praktpm/pages/home_page.dart';
 class EditWishPage extends StatefulWidget {
   final String username;
   final int id;
+
   const EditWishPage({super.key, required this.username, required this.id});
 
   @override
@@ -22,8 +23,8 @@ class _EditWishPageState extends State<EditWishPage> {
   final desc = TextEditingController();
   final priority = TextEditingController();
   final image = TextEditingController();
-  final categoryList = ["Clothes", "Gadget", "Hobby"];
 
+  final categoryList = ["Clothes", "Gadget", "Hobby"];
   late String category = categoryList[0];
   late bool acquired = false;
   bool isLoaded = false;
@@ -108,7 +109,7 @@ class _EditWishPageState extends State<EditWishPage> {
         acquired: acquired,
       );
 
-      final result = await WishApi.updateClothesById(updatedWish);
+      final result = await WishApi.updateWishById(updatedWish);
 
       if (result['status'] == 'Success') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,6 +155,7 @@ class _EditWishPageState extends State<EditWishPage> {
                 price.text = wishUpdate.price!.toString();
                 desc.text = wishUpdate.desc!;
                 category = wishUpdate.category!;
+                image.text = wishUpdate.image!; // ✅ fix disini
                 priority.text = wishUpdate.priority!;
                 acquired = wishUpdate.acquired!;
 
@@ -168,31 +170,48 @@ class _EditWishPageState extends State<EditWishPage> {
                 children: [
                   TextField(
                     controller: title,
-                    decoration: const InputDecoration(labelText: "Title", prefixIcon: Icon(Icons.title)),
+                    decoration: const InputDecoration(
+                      labelText: "Title",
+                      prefixIcon: Icon(Icons.title),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: price,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Price", prefixIcon: Icon(Icons.attach_money)),
+                    decoration: const InputDecoration(
+                      labelText: "Price",
+                      prefixIcon: Icon(Icons.attach_money),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: desc,
-                    decoration: const InputDecoration(labelText: "Description", prefixIcon: Icon(Icons.description)),
+                    decoration: const InputDecoration(
+                      labelText: "Description",
+                      prefixIcon: Icon(Icons.description),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: category,
-                    items: categoryList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    items: categoryList
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
                     onChanged: (value) => setState(() => category = value!),
-                    decoration: const InputDecoration(labelText: "Category", prefixIcon: Icon(Icons.category)),
+                    decoration: const InputDecoration(
+                      labelText: "Category",
+                      prefixIcon: Icon(Icons.category),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: priority,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Priority", prefixIcon: Icon(Icons.priority_high)),
+                    decoration: const InputDecoration(
+                      labelText: "Priority",
+                      prefixIcon: Icon(Icons.priority_high),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
